@@ -1,0 +1,43 @@
+---
+# tasks file for mysql_db
+    - name: Install MySQL DataBase
+      apt:
+        name: ["mysql-server"]
+        state: present
+
+    - name: Start MySQL Service
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Create Database User
+      no_log: true
+      mysql_user:
+        name: '{{ db_user }}'
+        password: '{{ db_password }}'
+        priv: '*.*:ALL,GRANT'
+        host: '%'
+        login_user: root
+        login_password: Passw0rd
+        state: present
+
+    - name: Create Application Database
+      mysql_db:
+        name: '{{ db_name }}'
+        state: present
+        login_user: '{{ db_user }}'
+        login_password: '{{ db_password }}'
+
+    - name: Copy sql script to target
+      copy:
+        src: db-load-script.sql
+        dest: /tmp/dump.sql
+
+    - name: Insert data on Database
+      mysql_db:
+        name: '{{ db_name }}'
+        state: import
+        target:  /tmp/dump.sql
+        login_user: '{{ db_user }}'
+        login_password: '{{ db_password }}'
